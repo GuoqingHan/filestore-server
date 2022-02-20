@@ -51,7 +51,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		newFile.Seek(0, 0) // !!! 移动到文件的起始位置
 		fileMeta.FileSha1 = util.FileSha1(newFile)
-		meta.UpdateFileMeta(fileMeta)
+		// meta.UpdateFileMeta(fileMeta)
+		_ = meta.UpdateFileMetaDB(fileMeta)
 		// 重定向
 		http.Redirect(w, r, "/file/upload/suc", http.StatusOK)
 	}
@@ -65,8 +66,13 @@ func UploadSucHandler(w http.ResponseWriter, r *http.Request) {
 // 查询文件元信息
 func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	fileHash := r.Form["fileHash"][0]
-	fMeta := meta.GetFileMeta(fileHash)
+	fileHash := r.Form.Get("filehash")
+	// fMeta := meta.GetFileMeta(fileHash)
+	fMeta, err := meta.GetFileMetaDB(fileHash)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	data, err := json.Marshal(fMeta)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -79,7 +85,12 @@ func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	fsha1 := r.Form.Get("filehash")
-	fm := meta.GetFileMeta(fsha1)
+	// fm := meta.GetFileMeta(fsha1)
+	fm, err := meta.GetFileMetaDB(fsha1)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	f, err := os.Open(fm.Location)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -117,7 +128,8 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	curFileMeta := meta.GetFileMeta(filesha1)
 	curFileMeta.FileName = newFileName
-	meta.UpdateFileMeta(curFileMeta)
+	// meta.UpdateFileMeta(curFileMeta)
+	meta.UpdateFileMetaDB(curFileMeta)
 	// 以json形式返回元文件信息
 	data, err := json.Marshal(curFileMeta)
 	if err != nil {

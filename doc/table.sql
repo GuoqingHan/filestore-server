@@ -1,14 +1,3 @@
-# filestore-server
-## 新知识
-### 分库分表
-1、水平分表
-每个上传文件的hash值的后两位来切分，分别对应数据库的tbl_00, tbl_01, ..., tbl_ff，共计256张table
-2、垂直分表
-
-预编译方式，创建sql操作，防止sql注入
-
-## mysql表
-### tbl_file
 create table `tbl_file`(
     `id` int(11) not null auto_increment,
     `file_sha1` char(40) not null default '' comment '文件hash',
